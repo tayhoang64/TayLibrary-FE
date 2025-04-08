@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Elements -->
+  <circle cx="150" cy="100" r="50" fill="#F3E8FF" opacity="0.5"/>
+  <circle cx="450" cy="300" r="70" fill="#F3E8FF" opacity="0.5"/>
+  
+  <!-- Clipboard -->
+  <rect x="200" y="100" width="200" height="250" rx="10" fill="#E9D5FF"/>
+  <rect x="220" y="120" width="160" height="210" fill="#ffffff"/>
+  
+  <!-- Form Lines -->
+  <rect x="240" y="150" width="120" height="8" rx="4" fill="#E9D5FF"/>
+  <rect x="240" y="180" width="120" height="8" rx="4" fill="#E9D5FF"/>
+  <rect x="240" y="210" width="120" height="8" rx="4" fill="#E9D5FF"/>
+  
+  <!-- Checkboxes -->
+  <rect x="240" y="250" width="20" height="20" rx="5" fill="#9333EA"/>
+  <path d="M245 260 L250 265 L255 255" stroke="white" stroke-width="2"/>
+  
+  <rect x="240" y="280" width="20" height="20" rx="5" fill="#E9D5FF"/>
+  
+  <!-- Decorative Elements -->
+  <circle cx="150" cy="200" r="15" fill="#9333EA"/>
+  <circle cx="450" cy="150" r="20" fill="#9333EA"/>
+  <circle cx="480" cy="220" r="10" fill="#9333EA"/>
+  
+  <!-- Floating Icons -->
+  <rect x="100" y="150" width="30" height="30" rx="15" fill="#EDE9FE"/>
+  <rect x="470" y="100" width="40" height="40" rx="20" fill="#EDE9FE"/>
+  <circle cx="120" cy="300" r="25" fill="#EDE9FE"/>
+</svg> 
