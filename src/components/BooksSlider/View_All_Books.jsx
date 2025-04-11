@@ -539,17 +539,19 @@ export default function ViewAllBooks() {
                             <h3 className="font-semibold text-lg mb-1 hover:text-blue-600">
                               <a href="/book-details">{book.title}</a>
                             </h3>
-                            <p className="text-sm text-gray-600 mb-1">By {book.author}</p>
+                            <p className="text-sm text-gray-600 mb-1">Stock: {book.stock}</p>
                             <div className="flex items-baseline mb-3">
                               <span className="text-lg font-bold text-gray-900">${book.price}</span>
                             </div>
-                            <button
+                            {
+                              book.stock > 0 && <button
                               onClick={() => setSelectedBook(book)}
                               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                               <CalendarCheck className="w-4 h-4" />
                               Rent
                             </button>
+                            }
                           </div>
                         </div>
                       ))}
