@@ -3,7 +3,7 @@ import Logo from "../../assets/website/logo.png";
 import { FaCartShopping, FaFontAwesome } from "react-icons/fa6";
 import DarkMode from "./DarkMode";
 import { FaCaretDown } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { BASE_URL } from "../../constants"
 
@@ -12,11 +12,6 @@ const Menu = [
     id: 1,
     name: "Home",
     link: "/#",
-  },
-  {
-    id: 2,
-    name: "Dashboard",
-    link: "/dashboard",
   },
 ];
 
@@ -36,18 +31,24 @@ const DropdownLinks = [
 ];
 
 const Navbar = ({ handleOrderPopup }) => {
-  const [user, setUser] = useState(null);
-
+  const [User, setUser] = useState(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/login");
+  };
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       axios
-       .get(`${BASE_URL}/api/user/me`, { headers: { Authorization: `Bearer ${token}` } })
-       .then((response) => {
-        console.log("User data:", response.data);
+        .get(`${BASE_URL}/api/user/current`, { headers: { Authorization: `Bearer ${token}` } })
+        .then((response) => {
+          console.log("User data:", response.data);
           setUser(response.data);
         })
-       .catch(() => {
+        .catch(() => {
           localStorage.removeItem("token");
         });
     }
@@ -79,6 +80,19 @@ const Navbar = ({ handleOrderPopup }) => {
                     </a>
                   </li>
                 ))}
+
+                {/* Hiển thị riêng Dashboard nếu là Admin */}
+                {User?.Role.RoleName === "Admin" && (
+                  <li>
+                    <a
+                      href="/dashboard"
+                      className="inline-block py-4 px-4 hover:text-primary duration-200"
+                    >
+                      Dashboard
+                    </a>
+                  </li>
+                )}
+
                 {/* Simple Dropdown and Links */}
                 <li className="group relative cursor-pointer">
                   <a
@@ -106,16 +120,35 @@ const Navbar = ({ handleOrderPopup }) => {
                   </div>
                 </li>
               </ul>
-              
-              {user == null ? <button
-                className="bg-gradient-to-r from-primary to-secondary hover:scale-105 duration-200 text-white py-1 px-4 rounded-full flex items-center gap-3"
-              >
-                <Link to ="/login">Login/Signup</Link>
-              </button> : <button
-                className="bg-gradient-to-r from-primary to-secondary hover:scale-105 duration-200 text-white py-1 px-4 rounded-full flex items-center gap-3"
-              >
-                <Link to ="/login">Hello {user.username}</Link>
-              </button>}
+
+              {User == null ? (
+                <button
+                  className="bg-gradient-to-r from-primary to-secondary hover:scale-105 duration-200 text-white py-1 px-4 rounded-full flex items-center gap-3"
+                >
+                  <Link to="/login">Login/Signup</Link>
+                </button>
+              ) : (
+                <div className="relative inline-block text-left">
+                  <div
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="cursor-pointer bg-gradient-to-r from-primary to-secondary text-white py-1 px-4 rounded-full"
+                  >
+                    Hello, {User.Username}
+                  </div>
+
+                  {isOpen && (
+                    <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Đăng xuất
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
             </div>
           </div>
         </div>

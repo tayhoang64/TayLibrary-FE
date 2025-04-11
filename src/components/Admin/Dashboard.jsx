@@ -4,8 +4,6 @@ import { useEffect, useState } from "react"
 import {
   BookOpen,
   User,
-  Settings,
-  LogOut,
   Plus,
   Search,
   Edit,
@@ -13,9 +11,12 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Home,
+  Repeat,
 } from "lucide-react"
 import { BASE_URL } from "../../constants"
 import axios from "axios"
+import { useNavigate } from "react-router-dom"
 
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("books")
@@ -27,8 +28,13 @@ export default function AdminDashboard() {
   const [showDeleteUserConfirm, setShowDeleteUserConfirm] = useState(false)
   const [selectedBook, setSelectedBook] = useState(null)
   const [selectedUser, setSelectedUser] = useState(null)
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Sample data
+
+
+
+  //Sample data
   const [books, setBooks] = useState([
     {
       id: "1",
@@ -45,14 +51,15 @@ export default function AdminDashboard() {
     },
   ])
 
-  
+
 
   const [user, setUser] = useState(null);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       axios
-        .get(`${BASE_URL}/api/user/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .get(`${BASE_URL}/api/user/current`, { headers: { Authorization: `Bearer ${token}` } })
         .then((response) => {
           console.log("User data:", response.data);
           setUser(response.data);
@@ -64,23 +71,25 @@ export default function AdminDashboard() {
 
     axios.get(`${BASE_URL}/api/book`)
       .then(respone => {
-        console.log(respone);  // array of books
-        let data = Array.from(respone.data).map(book =>{
+        console.log(respone);
+        let data = Array.from(respone.data).map(book => {
           return {
-            id: book.id,
-            title: book.title,
-            author: book.author,
-            publisher: book.publisher,  
-            year: book.year,
-            price: book.price,
-            file: `${BASE_URL}/api/book/file/${book.id}`,
-            image: `${BASE_URL}/api/book/image/${book.id}`,
-            fullcontent: book.fullcontent,
-            stock: book.stock
+            id: book.BookId,
+            title: book.Title,
+            author: book.Author,
+            category: book.Categories?.map(cat => cat.CategoryName) || [],
+            year: book.Year,
+            price: book.Price,
+            file: `${BASE_URL}/${book.File}`,
+            image: `${BASE_URL}/${book.Image}`,
+            fullcontent: book.FullContent,
+            stock: book.Stock
           }
         });
         setBooks(data);
       })
+
+
   }, []);
 
   // Book CRUD operations
@@ -95,10 +104,30 @@ export default function AdminDashboard() {
     setSelectedBook(null)
   }
 
-  const deleteBook = (id) => {
-    setBooks(books.filter((book) => book.id !== id))
-    setShowDeleteBookConfirm(false)
-    setSelectedBook(null)
+  const deleteBook = async (id) => {
+    try {
+      const response = await fetch(`${BASE_URL}/api/book/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (response.ok) {
+        // Xoá khỏi giao diện
+        setBooks(books.filter((book) => book.id !== id));
+        alert("Book deleted successfully!");
+      } else {
+        const result = await response.json();
+        alert(`Error deleting book: ${result.message}`);
+      }
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      alert("Something went wrong while deleting the book.");
+    }
+
+    setShowDeleteBookConfirm(false);
+    setSelectedBook(null);
   }
 
   // User CRUD operations
@@ -119,8 +148,8 @@ export default function AdminDashboard() {
     setSelectedUser(null)
   }
 
-  
-  
+
+
 
   return (
     <div className="flex h-screen bg-white">
@@ -128,7 +157,7 @@ export default function AdminDashboard() {
       <div className="w-[208px] bg-gray-50 border-r border-gray-200 flex flex-col">
         <div className="p-6">
           <div className="flex items-center gap-2 text-gray-700 font-medium">
-            <span className="text-2xl">libib</span>
+            <span className="text-2xl">Library Managerment</span>
             <BookOpen className="h-5 w-5" />
           </div>
         </div>
@@ -142,16 +171,23 @@ export default function AdminDashboard() {
               onClick={() => setActiveSection("books")}
             />
             <SidebarItem
-              label="Manage Users"
-              active={activeSection === "users"}
-              icon={<User className="h-4 w-4" />}
-              onClick={() => setActiveSection("users")}
+              label="Manage Borrow/Return"
+              active={activeSection === "borrow"}
+              icon={<Repeat className="h-4 w-4" />}
+              onClick={() => {
+                setActiveSection("borrow");
+                navigate("/borrow-return");
+              }}
             />
-          </div>
-
-          <div className="mt-auto px-3 py-2">
-            <SidebarItem label="Settings" active={false} icon={<Settings className="h-4 w-4" />} />
-            <SidebarItem label="Logout" active={false} icon={<LogOut className="h-4 w-4" />} />
+            <SidebarItem
+              label="Home"
+              active={activeSection === "home"}
+              icon={<Home className="h-4 w-4" />}
+              onClick={() => {
+                setActiveSection("home");
+                navigate("/");
+              }}
+            />
           </div>
         </nav>
       </div>
@@ -161,15 +197,18 @@ export default function AdminDashboard() {
         {/* Header */}
         <header className="h-[72px] border-b border-gray-200 flex items-center justify-between px-8">
           <h1 className="text-3xl font-bold">
-            {activeSection === "books" ? "Manage Books" : "Manage Users"}
+            {activeSection === "books"
+              ? "Manage Books"
+              : activeSection === "users"
+                ? "Manage Users"
+                : activeSection === "borrow"
+                  ? "Manage Borrow/Return"
+                  : ""}
           </h1>
 
+
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">
-              {user ? `Hello ${user.username}` : "Loading..."}
-            </span>
             <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
-              {/* Avatar hoặc hình đại diện nếu có */}
             </div>
           </div>
         </header>
@@ -191,6 +230,8 @@ export default function AdminDashboard() {
                       type="text"
                       placeholder="Search books..."
                       className="w-64 border border-gray-300 rounded-md py-1.5 px-3 pr-10"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <Search className="absolute right-3 top-2 h-4 w-4 text-gray-400" />
                   </div>
@@ -209,22 +250,24 @@ export default function AdminDashboard() {
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50 text-left">
                       <th className="py-3 px-4 text-sm font-medium text-gray-600">Book</th>
-                      <th className="py-3 px-4 text-sm font-medium text-gray-600">Title</th>
-                      <th className="py-3 px-4 text-sm font-medium text-gray-600">Author</th>
-                      <th className="py-3 px-4 text-sm font-medium text-gray-600">Publisher</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-600">Title & Author</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-600">Category</th>
                       <th className="py-3 px-4 text-sm font-medium text-gray-600">Year</th>
                       <th className="py-3 px-4 text-sm font-medium text-gray-600">Price</th>
-                      <th className="py-3 px-4 text-sm font-medium text-gray-600">Actions</th>
+                      <th className="py-3 px-4 text-sm font-medium text-gray-600">Stock</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {books.map((book) => (
+                    {books.filter((book) =>
+                      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      book.author.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map((book) => (
                       <tr key={book.id} className="border-b border-gray-200 hover:bg-gray-50">
                         <img
-                    src={book.image}
-                    alt=""
-                    className="h-[220px] w-[150px] object-cover rounded-md "
-                  />
+                          src={book.image}
+                          alt=""
+                          className="h-[220px] w-[150px] object-cover rounded-md "
+                        />
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-14 bg-gray-100">
@@ -235,23 +278,19 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-sm">{book.publisher}</td>
+                        <td className="py-3 px-4 text-sm">
+                          {Array.isArray(book.category) ? book.category.join(", ") : "No category"}
+                        </td>
                         <td className="py-3 px-4 text-sm">{book.year}</td>
                         <td className="py-3 px-4 text-sm">{book.price}</td>
                         {/* <td className="py-3 px-4 text-sm">{book.}</td> */}
-                        <td className="py-3 px-4">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${book.available ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                              }`}
-                          >
-                            {book.available ? "Available" : "Checked Out"}
-                          </span>
-                        </td>
+                        <td className="py-3 px-4 text-sm">{book.stock}</td>
                         <td className="py-3 px-4">
                           <div className="flex gap-2">
                             <button
                               className="text-gray-600 hover:text-teal-600"
                               onClick={() => {
+                                console.log(book);
                                 setSelectedBook(book)
                                 setShowEditBookForm(true)
                               }}
@@ -425,8 +464,8 @@ export default function AdminDashboard() {
           message={`Are you sure you want to delete "${selectedBook.title}"? This action cannot be undone.`}
           onConfirm={() => deleteBook(selectedBook.id)}
           onCancel={() => {
-            setShowDeleteBookConfirm(false)
-            setSelectedBook(null)
+            setShowDeleteBookConfirm(false);
+            setSelectedBook(null);
           }}
         />
       )}
@@ -476,7 +515,20 @@ function SidebarItem({ label, active = false, icon = null, onClick }) {
 }
 
 function BookForm({ book, onClose, onSave }) {
-  const isEditing = !!book
+  const isEditing = !!book;
+  const [categoryList, setCategoryList] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [pdfFile, setPdfFile] = useState(null);
+
+  useEffect(() => {
+    axios.get(`${BASE_URL}/api/category`)
+      .then(res => {
+        setCategoryList(res.data);
+      })
+      .catch(err => {
+        console.error("Failed to fetch categories:", err);
+      });
+  }, []);
 
   const [formData, setFormData] = useState({
     id: book?.id || "",
@@ -484,26 +536,135 @@ function BookForm({ book, onClose, onSave }) {
     author: book?.author || "",
     publisher: book?.publisher || "",
     year: book?.year || new Date().getFullYear(),
-    price: book?.price || "My Books",
-    file: book?.file || "",
+    price: book?.price || "",
+    file: "",
     fullContent: book?.fullContent || "",
     stock: book?.stock || "",
-    image: book?.image || "",
+    image: "",
     available: book?.available ?? true,
-  })
+    category: book?.Categories?.map(cat => cat.CategoryId) || [],
+  });
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-    }))
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (e.target.name === "image") {
+      setImageFile(file);
+    } else if (e.target.name === "file") {
+      setPdfFile(file);
+    }
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    console.log(formData.id);
+
+    const form = new FormData();
+    form.append("title", formData.title);
+    form.append("author", formData.author);
+    form.append("publisher", formData.publisher);
+    form.append("year", formData.year);
+    form.append("price", formData.price);
+    form.append("stock", formData.stock);
+    form.append("status", formData.available ? "true" : "false");
+
+    if (new FormData(e.target.parentElement.parentElement).get("file")) {
+      form.append("file", new FormData(e.target.parentElement.parentElement).get("file"));
+    }
+
+    if (new FormData(e.target.parentElement.parentElement).get("image")) {
+      form.append("image", new FormData(e.target.parentElement.parentElement).get("image"));
+    }
+
+    formData.category.forEach((catId) => {
+      form.append("categoryIds", catId);
+    });
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/book/${formData.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: form,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Book updated successfully!");
+        onSave(result);
+        onClose();
+        window.location.reload();
+      } else {
+        alert(`Error: ${result.message}`);
+      }
+    } catch (err) {
+      console.error("Error updating book:", err);
+      alert("Something went wrong!");
+    }
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    onSave(formData)
-  }
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+
+    const form = new FormData();
+    form.append("title", formData.title);
+    form.append("author", formData.author);
+    form.append("publisher", formData.publisher);
+    form.append("year", formData.year);
+    form.append("price", formData.price);
+    form.append("stock", formData.stock);
+    form.append("status", formData.available ? "true" : "false");
+
+    console.log(e.target.parentElement.parentElement);
+
+    if (new FormData(e.target.parentElement.parentElement).get("file")) {
+      form.append("file", new FormData(e.target.parentElement.parentElement).get("file"));
+    }
+
+    if (new FormData(e.target.parentElement.parentElement).get("image")) {
+      form.append("image", new FormData(e.target.parentElement.parentElement).get("image"));
+    }
+
+    formData.category.forEach((catId) => {
+      form.append("categoryIds", catId);
+    });
+
+    console.log(form.get("file"));
+    console.log(form.get("image"));
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/book`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: form,
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Book added successfully!");
+        onSave(result);
+        onClose();
+        window.location.reload();
+      } else {
+        alert(`Error: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("Error adding book:", err);
+      alert("Something went wrong!");
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -516,8 +677,10 @@ function BookForm({ book, onClose, onSave }) {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={isEditing ? handleUpdateSubmit : handleAddSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <input name="id" value={formData.id} hidden readOnly />
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
                 <input
@@ -557,7 +720,7 @@ function BookForm({ book, onClose, onSave }) {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
                 <input
-                  type="number" min="1900" max="2099" step="1"
+                  type="number" min="1900" max="2099"
                   name="year"
                   value={formData.year}
                   onChange={handleChange}
@@ -582,8 +745,7 @@ function BookForm({ book, onClose, onSave }) {
                 <input
                   type="file"
                   name="file"
-                  value={formData.file}
-                  onChange={handleChange}
+                  onChange={handleFileChange}
                   className="w-full border border-gray-300 rounded-md py-2 px-3"
                 />
               </div>
@@ -604,10 +766,29 @@ function BookForm({ book, onClose, onSave }) {
                 <input
                   type="file"
                   name="image"
-                  value={formData.image}
-                  onChange={handleChange}
+                  onChange={handleFileChange}
                   className="w-full border border-gray-300 rounded-md py-2 px-3"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
+                <select
+                  multiple
+                  name="category"
+                  value={formData.category}
+                  onChange={(e) => {
+                    const selected = Array.from(e.target.selectedOptions, (opt) => parseInt(opt.value));
+                    setFormData((prev) => ({ ...prev, category: selected }));
+                  }}
+                  className="w-full border border-gray-300 rounded-md py-2 px-3 h-40"
+                >
+                  {categoryList.map((cat) => (
+                    <option key={cat.CategoryId} value={cat.CategoryId}>
+                      {cat.CategoryName}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="flex items-center">
@@ -633,18 +814,25 @@ function BookForm({ book, onClose, onSave }) {
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700"
-              >
-                {isEditing ? "Save Changes" : "Add Book"}
-              </button>
+              {isEditing ?
+                <button
+                  onClick={handleUpdateSubmit}
+                  className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700"
+                >
+                  Save Changes
+                </button> : <button
+                  onClick={handleAddSubmit}
+                  className="px-4 py-2 bg-teal-600 text-white rounded-md text-sm font-medium hover:bg-teal-700"
+                >
+                  Add Book
+                </button>}
+
             </div>
           </form>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function UserForm({ user, onClose, onSave }) {

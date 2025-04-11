@@ -5,53 +5,50 @@ import axios from "axios";
 
 function Signup() {
     const navigate = useNavigate();
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+    const [Username, setUsername] = useState("");
+    const [Email, setEmail] = useState("");
+    const [Password, setPassword] = useState("");
+    const [CardNumber, setCardNumber] = useState("");
     const [error, setError] = useState("");
 
-    const validateEmail = (email) => {
-        return /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(email);
+    const validateEmail = (Email) => {
+        return /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/.test(Email);
     };
 
-    const validatePassword = (password) => {
-        return /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(password);
+    const validatePassword = (Password) => {
+        return /^(?=.*\d)(?=.*[!@#$%^&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/.test(Password);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
 
-        if (!validateEmail(email)) {
+        if (!validateEmail(Email)) {
             setError("Invalid email format");
             return;
         }
-        if (!validatePassword(password)) {
+        if (!validatePassword(Password)) {
             setError(
                 "Password must be at least 8 characters, include uppercase, lowercase, number, and special character"
             );
             return;
         }
-        if (password !== confirmPassword) {
-            setError("Passwords do not match");
-            return;
-        }
 
         try {
-            const response = await axios.post(`${BASE_URL}/api/user/register`, {
-                username,
-                email,
-                password,
-                confirmPassword,
+            const response = await axios.post(`${BASE_URL}/register`, {
+                Username,
+                Password,
+                Email,
+                CardNumber,
             });
-            if (response.status === 200) {
+            if (response.status === 200 || response.status === 201) {
+                alert("Signup successful! Please login to continue.");
                 console.log("Signup successful:", response.data);
-                navigate("/login"); 
+                navigate("/login");
             }
         } catch (err) {
-            console.log(err);
-            setError("Signup failed. Please try again.");
+            console.log("Signup error:", err.response?.data || err);
+            setError(err.response?.data?.message || "Signup failed. Please try again.");
         }
     };
 
@@ -88,14 +85,14 @@ function Signup() {
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="space-y-2">
-                        <label htmlFor="username" className="block text-sm font-medium">
+                        <label htmlFor="Username" className="block text-sm font-medium">
                             Username
                         </label>
                         <input
-                            id="username"
+                            id="Username"
                             type="text"
                             placeholder="aloooooo"
-                            value={username}
+                            value={Username}
                             onChange={(e) => setUsername(e.target.value)}
                             required
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
@@ -103,14 +100,14 @@ function Signup() {
                     </div>
 
                     <div className="space-y-2">
-                        <label htmlFor="email" className="block text-sm font-medium">
+                        <label htmlFor="Email" className="block text-sm font-medium">
                             Email
                         </label>
                         <input
-                            id="email"
+                            id="Email"
                             type="email"
                             placeholder="hi@filianta.com"
-                            value={email}
+                            value={Email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
@@ -119,14 +116,14 @@ function Signup() {
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="password" className="block text-sm font-medium">
+                            <label htmlFor="Password" className="block text-sm font-medium">
                                 Password
                             </label>
                         </div>
                         <input
-                            id="password"
+                            id="Password"
                             type="password"
-                            value={password}
+                            value={Password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
@@ -134,15 +131,15 @@ function Signup() {
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="password" className="block text-sm font-medium">
-                                Confirm Password
+                            <label htmlFor="CardNumber" className="block text-sm font-medium">
+                                CardNumber
                             </label>
                         </div>
                         <input
-                            id="cfpassword"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            id="CardNumber"
+                            type="text"
+                            value={CardNumber}
+                            onChange={(e) => setCardNumber(e.target.value)}
                             required
                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
                         />

@@ -14,6 +14,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from "./components/Auth/Login.jsx";
 import Signup from "./components/Auth/Signup.jsx";
 import AdminDashboard from "./components/Admin/Dashboard.jsx";
+import ViewAllBooks from "./components/BooksSlider/View_All_Books.jsx";
+import BorrowReturnManagement from "./components/Admin/Borrow_ReturnManage.jsx";
 
 const App = () => {
   const [orderPopup, setOrderPopup] = React.useState(false);
@@ -57,6 +59,8 @@ const App = () => {
         <Route path="/login" element={<Login/>} />
         <Route path="/signup" element={<Signup/>} />
         <Route path="/dashboard" element={<AdminDashboard/>} />
+        <Route path="/borrow-return" element={<BorrowReturnManagement/>} />
+        <Route path="/view-all-books" element={<ViewAllBooks/>} />
       </Routes>
       
     </Router>

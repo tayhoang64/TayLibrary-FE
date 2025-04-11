@@ -4,21 +4,22 @@ import { Link, useNavigate } from "react-router-dom"
 import { BASE_URL } from "../../constants"
 
 function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [Email, setEmail] = useState("")
+  const [Password, setPassword] = useState("")
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const response = await axios.post(`${BASE_URL}/api/user/login`, {
-        email,
-        password,
+      const response = await axios.post(`${BASE_URL}/login`, {
+        Email,
+        Password,
       });
 
       const { token } = response.data;
       localStorage.setItem("token", token);
       if (response.status === 200) {
+        alert("Login successful!");
         console.log("Login successful:", response.data);
         navigate("/");
       }
@@ -67,7 +68,7 @@ function Login() {
               id="email"
               type="email"
               placeholder="hi@filianta.com"
-              value={email}
+              value={Email}
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
@@ -86,7 +87,7 @@ function Login() {
             <input
               id="password"
               type="password"
-              value={password}
+              value={Password}
               onChange={(e) => setPassword(e.target.value)}
               required
               className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-800"
